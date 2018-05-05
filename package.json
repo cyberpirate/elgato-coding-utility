@@ -1,0 +1,22 @@
+{
+  "name": "elgato-coding-utility",
+  "version": "1.0.0",
+  "description": "manage elgato stream deck",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cyberpirate/elgato-coding-utility.git"
+  },
+  "author": "",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/cyberpirate/elgato-coding-utility/issues"
+  },
+  "homepage": "https://github.com/cyberpirate/elgato-coding-utility#readme",
+  "dependencies": {
+    "elgato-stream-deck": "^2.1.1"
+  }
+}
