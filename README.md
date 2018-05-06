@@ -9,12 +9,15 @@ json
 		{
 			"name": "profileName",
 			"activateRule": function,
-			"keys": {
-				[0-14]: {
+			"keys": [
+				{
 					"image": "path",
 					"color": "R:G:B",
+					"startPos": [x, y],
+					"ltr": true,
+					"utd": true,
 					"action": function
 				}
-			}
+			]
 		}
 	]

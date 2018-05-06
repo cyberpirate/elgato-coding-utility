@@ -39,25 +39,76 @@ function arrayEquals(arr1, arr2) {
 	return JSON.stringify(arr1)===JSON.stringify(arr2);
 }
 
+function indexToXY(index) {
+	var x = index % 5;
+	var y = Math.floor(index / 5);
+	return [2 - x, 1 - y]
+}
+
+function xyToIndex(x, y) {
+	x = -x;
+	y = -y;
+	return (y+1) * 5 + (x+2);
+}
+
+function getNext(pos, ltr, utd) {
+
+	if(pos == -1) {
+		return xyToIndex(
+			ltr ? -2 : 2,
+			utd ? 1 : -1
+		)
+	}
+
+	if(typeof(pos) === "number") pos = indexToXY(pos);
+
+	pos[0] += ltr ? +1 : -1;
+
+	if(pos[0] < -2 || 2 < pos[0]) {
+		pos[0] = ltr ? -2 : 2;
+		pos[1] += utd ? -1 : +1;
+	}
+
+	if(pos[1] < -1 || 1 < pos[1]) {
+		return -1;
+	}
+
+	return xyToIndex(pos[0], pos[1]);
+}
+
 function appendKeys(newKeys) {
 
-	for (var keyString in newKeys) {
-		var key = parseInt(keyString);
+	for (var i = 0; i < newKeys.length; i++) {
 
-		if(key in keys) console.warn("Key: " + key + " is being overwritten");
-		keys[key] = newKeys[key];
+		var ltr = "ltr" in newKeys[i] ? newKeys[i]["ltr"] : true;
+		var utd = "utd" in newKeys[i] ? newKeys[i]["utd"] : true;
+		var startPos = "startPos" in newKeys[i] ? newKeys[i]["startPos"] : indexToXY(getNext(-1, ltr, utd));
 
-		if("image" in keys[key]) {
-			myStreamDeck.fillImageFromFile(key, path.join(profileDir, keys[key]["image"]));
+		startPos = xyToIndex(startPos[0], startPos[1]);
+
+		while(startPos in keys) {
+			startPos = getNext(startPos, ltr, utd);
+			if(startPos == -1) break;
 		}
 
-		else if("color" in keys[key]) {
-			cParts = keys[key]["color"].split(":");
+		if(startPos == -1) {
+			console.warn("no room for key");
+			continue;
+		}
+
+		keys[startPos] = newKeys[i];
+
+		if("image" in keys[startPos]) {
+			myStreamDeck.fillImageFromFile(startPos, path.join(profileDir, keys[startPos]["image"]));
+		}
+
+		else if("color" in keys[startPos]) {
+			cParts = keys[startPos]["color"].split(":");
 			if(cParts.length == 3) {
 				cParts[0] = clamp(parseInt(cParts[0]), 0, 255);
 				cParts[1] = clamp(parseInt(cParts[1]), 0, 255);
 				cParts[2] = clamp(parseInt(cParts[2]), 0, 255);
-				myStreamDeck.fillColor(key, cParts[0], cParts[1], cParts[2]);
+				myStreamDeck.fillColor(startPos, cParts[0], cParts[1], cParts[2]);
 			}
 		}
 	}
@@ -74,21 +125,21 @@ function applyKeys(newKeys) {
 function updateProfile() {
 	if(!profileActivationEnabled) return;
 
-	var newActiveProfiles = [];
-	var profileKeys = []
+	var oldActiveProfiles = activeProfiles;
+	activeProfiles = [];
+	var profileKeys = [];
 
 	for(var i = 0; i < profiles.length; i++) {
 		var active = profiles[i]["activateRule"]();
 		if(active) {
-			newActiveProfiles.push(profiles[i]["name"]);
+			activeProfiles.push(profiles[i]["name"]);
 			profileKeys.push(profiles[i]["keys"]);
 		}
 	}
 
-	if(!arrayEquals(activeProfiles, newActiveProfiles)) {
-		activeProfiles = newActiveProfiles;
+	if(!arrayEquals(oldActiveProfiles, activeProfiles)) {
 
-		applyKeys({});
+		applyKeys([]);
 
 		for(var i = 0; i < profileKeys.length; i++) {
 			appendKeys(profileKeys[i]);
@@ -103,7 +154,7 @@ function activateProfile(newProfiles) {
 
 if (!fs.existsSync(profilePath)) {
 	console.log("~/.elgato_profile/profile.js not found")
-	exit();
+	process.exit()
 }
 
 fs.readFile(profilePath, "utf-8", function(err, data) {

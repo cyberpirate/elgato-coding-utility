@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/cyberpirate/elgato-coding-utility#readme",
   "dependencies": {
-    "elgato-stream-deck": "^2.1.1"
+    "elgato-stream-deck": "^2.1.1",
+    "robot-js": "^2.0.0"
   }
 }
